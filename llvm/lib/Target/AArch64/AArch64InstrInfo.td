@@ -2438,6 +2438,10 @@ def TLSDESCCALL : Pseudo<(outs), (ins i64imm:$sym), []>, Sched<[]> {
 // augmentation string.
 def EMITBKEY : Pseudo<(outs), (ins), []>, Sched<[]> {}
 
+// Pseudo instruction to tell the streamer to emit a 'G' character into the
+// augmentation string.
+def EMITMTETAGGED : Pseudo<(outs), (ins), []>, Sched<[]> {}
+
 // FIXME: maybe the scratch register used shouldn't be fixed to X1?
 // FIXME: can "hasSideEffects be dropped?
 // This gets lowered to an instruction sequence which takes 16 bytes
@@ -7256,14 +7260,6 @@ def SHA256SU0rr : SHATiedInstVV<0b0010, "sha256su0",int_aarch64_crypto_sha256su0
 // Compiler-pseudos
 //----------------------------------------------------------------------------
 // FIXME: Like for X86, these should go in their own separate .td file.
-
-def def32 : PatLeaf<(i32 GPR32:$src), [{
-  return isDef32(*N);
-}]>;
-
-// In the case of a 32-bit def that is known to implicitly zero-extend,
-// we can use a SUBREG_TO_REG.
-def : Pat<(i64 (zext def32:$src)), (SUBREG_TO_REG (i64 0), GPR32:$src, sub_32)>;
 
 // For an anyext, we don't care what the high bits are, so we can perform an
 // INSERT_SUBREF into an IMPLICIT_DEF.
