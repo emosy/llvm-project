@@ -73,6 +73,14 @@ New Features
   moved from the dylib to the header. This means the function no longer has a
   minimum deployment target.
 
+- Implemented P2216R3 (std::format improvements). The format functions
+  (``std::format``, ``std::format_to``, ``std::format_to_n``, and
+  ``std::formatted_size``) now validate the format string at compile time.
+  When the format string is invalid this will make the code ill-formed instead
+  of throwing an exception at run-time.  (This does not affect the ``v``
+  functions.)
+
+
 API Changes
 -----------
 
@@ -89,7 +97,10 @@ API Changes
 - Some libc++ headers no longer transitively include all of:
     - ``<algorithm>``
     - ``<chrono>``
+    - ``<exception>``
     - ``<functional>``
+    - ``<new>``
+    - ``<typeinfo>``
     - ``<utility>``
 
   If, after updating libc++, you see compiler errors related to missing declarations
