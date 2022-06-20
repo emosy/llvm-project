@@ -29,7 +29,16 @@ namespace tblgen {
 // in a way the user wanted but has some additional indenting due to being
 // nested.
 void emitDescription(llvm::StringRef description, llvm::raw_ostream &os);
+//TODO: convert this to tryEmitDescription
 
+// Checks that the string given meets the following criteria:
+// - All fenced code block starts (```) match with a corresponding end (```) on the same indentation level.
+// - No fenced code block ends exist without a corresponding start at the same indentation level.
+// If these criteria are met, then this returns false. Otherwise, this returns true.
+// This method returns true if the text has this type of mistake.
+// Since this does not need to modify the text, it only needs a reference to a const StringRef.
+//TODO: make this return a pair of size_t representing the offending code blocks
+bool hasUnmatchedCodeBlocks(const llvm::StringRef &uncheckedText);
 } // namespace tblgen
 } // namespace mlir
 

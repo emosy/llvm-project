@@ -30,6 +30,7 @@
 #include "llvm/TableGen/TableGenBackend.h"
 
 #include <set>
+#include <stack>
 
 using namespace llvm;
 using namespace mlir;
@@ -46,6 +47,39 @@ using mlir::tblgen::Operator;
 void mlir::tblgen::emitDescription(StringRef description, raw_ostream &os) {
   raw_indented_ostream ros(os);
   ros.printReindented(description.rtrim(" \t"));
+}
+
+// Checks that the string given meets the following criteria:
+// - All fenced code block starts (```) match with a corresponding end (```) on the same indentation level.
+// - No fenced code block ends exist without a corresponding start at the same indentation level.
+// If these criteria are met, then this returns false. Otherwise, this returns true.
+// This method returns true if the text has this type of mistake.
+// Since this does not need to modify the text, it only needs a reference to a const StringRef.
+bool mlir::tblgen::hasUnmatchedCodeBlocks(const llvm::StringRef &uncheckedText) {
+  const llvm::StringRef code_block_kw = "```";
+  size_t from_param = 0;
+  size_t next_match = 0;
+  std::stack <size_t> indent_stack;
+  while ((next_match = uncheckedText.find(code_block_kw, from_param)) != llvm::StringRef::npos) {
+    // llvm::outs() << "next_match: " << next_match << "\n";
+    size_t prev_line_end = uncheckedText.rfind('\n', next_match);
+    size_t indent = next_match - prev_line_end;
+    //if this is at a higher indent level than the top of the stack, push it on the stack
+    if (indent_stack.empty() || indent > indent_stack.top()) {
+      indent_stack.push(indent);
+    } else if (indent_stack.top() == indent) {
+      //if this is at the same indent level as the top of the stack, pop it off the stack
+      indent_stack.pop();
+    } else {
+      //if this is at a lower indent level than the top of the stack, it is invalid
+      return true;
+    }
+    from_param = next_match; //FIXME: should be next_match + 1?
+  }
+  if (indent_stack.empty()) {
+    return false; // false is good here!!!
+  }
+  return true;
 }
 
 // Emits `str` with trailing newline if not empty.
@@ -153,8 +187,19 @@ static void emitOpDoc(const Operator &op, raw_ostream &os) {
   if (op.hasAssemblyFormat())
     emitAssemblyFormat(op.getOperationName(), op.getAssemblyFormat().trim(),
                        os);
-  if (op.hasDescription())
-    mlir::tblgen::emitDescription(op.getDescription(), os);
+  if (op.hasDescription()) {
+    auto descript = op.getDescription();
+    if (hasUnmatchedCodeBlocks(descript)) {
+      // llvm::errs() << "WARNING: Fenced code blocks in the description are not matched.\n";
+      // abort();
+      // llvm::PrintFatalNote(op.getLoc(), "Fenced code blocks in the description are not matched.");
+      llvm::PrintNote(op.getLoc(), "WARNING: Fenced code blocks in the text are not matched.");
+      llvm::PrintWarning(op.getLoc(), "WARNING: Fenced code blocks in the text are not matched.");
+      llvm::PrintError(op.getLoc(), "WARNING: Fenced code blocks in the text are not matched.");
+      // llvm::PrintFatalNote(op.getLoc(), "Fenced code blocks in the description are not matched.");
+    }
+    mlir::tblgen::emitDescription(descript, os);
+  }
 
   emitOpTraitsDoc(op, os);
 
