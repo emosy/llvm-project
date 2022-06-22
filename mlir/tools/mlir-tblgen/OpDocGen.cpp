@@ -74,7 +74,7 @@ bool mlir::tblgen::hasUnmatchedCodeBlocks(const llvm::StringRef &uncheckedText) 
       //if this is at a lower indent level than the top of the stack, it is invalid
       return true;
     }
-    from_param = next_match; //FIXME: should be next_match + 1?
+    from_param = next_match + 1;
   }
   if (indent_stack.empty()) {
     return false; // false is good here!!!
