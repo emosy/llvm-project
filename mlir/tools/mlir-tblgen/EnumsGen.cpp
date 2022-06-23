@@ -565,6 +565,16 @@ static bool emitEnumDefs(const RecordKeeper &recordKeeper, raw_ostream &os) {
   return false;
 }
 
+
+//TODO: only emit enums for this specific dialect
+// Specify which category to generate enums for
+static llvm::cl::OptionCategory enumGenCat("Options for -gen-enum-*");
+static llvm::cl::opt<std::string>
+    enumDialect("enums-dialect",
+                llvm::cl::desc("Generate enums for this dialect"),
+                llvm::cl::cat(enumGenCat), llvm::cl::CommaSeparated);
+
+
 // Registers the enum utility generator to mlir-tblgen.
 static mlir::GenRegistration
     genEnumDecls("gen-enum-decls", "Generate enum utility declarations",
