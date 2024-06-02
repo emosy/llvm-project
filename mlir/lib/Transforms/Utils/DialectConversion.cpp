@@ -1132,6 +1132,10 @@ void ReplaceOperationRewrite::commit(RewriterBase &rewriter) {
         return rewriterImpl.mapping.lookupOrNull(result, result.getType());
       });
 
+  // TODO: notifyOpReplaced(op, newOp) !!!
+  // maybe we need to call notifyOpReplaced multiple times?
+  // or add a new listener function which takes SmallVector/ArrayRef of operation?
+  // need to maybe do an RFC for this
   // Notify the listener that the operation is about to be replaced.
   if (listener)
     listener->notifyOperationReplaced(op, replacements);
